@@ -57,7 +57,7 @@
         // TODO 1: 페이지 로드 시 localStorage에서 저장된 글 복원
         //         힌트: localStorage.getItem('memo'), textarea.value = ...
         // 직접 작성
-        const memo = localStorage.getItem('memo');
+        const memo = localStorage.getItem('memo') || '';
         textarea.value = memo;
         setCount(memo);
 
