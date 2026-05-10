@@ -42,13 +42,23 @@
         }
 
         .name {
-            flex: 1;
             cursor: pointer;
             color: #0066cc;
         }
 
         .name:hover {
             text-decoration: underline;
+        }
+
+        .url {
+            flex: 1;
+            text-align: right;
+            color: #999;
+            font-size: 0.85rem;
+            margin-right: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .star {
@@ -87,18 +97,84 @@
         const addBtn = document.querySelector('#addBtn');
         const list = document.querySelector('#bookmarkList');
 
+        const STORAGE_KEY = 'bookmarks';
+
         // 데이터 모델: [{ id, name, url, starred }, ...]
         let bookmarks = [];
 
+        // AI: Claude Code 생성, 검증 완료
+        // innerHTML 삽입 전 사용자 입력 이스케이프 — XSS 방지
+        const escapeHtml = (s) => s.replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+
+        // AI: Claude Code 생성, 검증 완료
+        // P1 — http:// / https:// 누락 시 자동 보완
+        const normalizeUrl = (url) => /^https?:\/\//i.test(url) ? url : 'https://' + url;
+
+        const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
+
         // TODO 1: 페이지 로드 시 localStorage에서 bookmarks 배열 복원 + 렌더링
-        //         힌트: JSON.parse, render() 호출
+        // AI: Claude Code 생성, 검증 완료
+        bookmarks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 
         // TODO 2: render() — bookmarks 배열을 화면에 그리기
-        //         힌트: list.innerHTML = bookmarks.map(b => `<li data-id="${b.id}">...</li>`).join('')
+        // AI: Claude Code 생성, 검증 완료
+        const render = () => {
+            // P1 — 별표 활성된 항목이 위로 (true=1, false=0 → 내림차순)
+            bookmarks.sort((a, b) => (b.starred - a.starred));
+            list.innerHTML = bookmarks.map(b => `
+                <li data-id="${b.id}">
+                    <span class="name" data-action="open">${escapeHtml(b.name)}</span>
+                    <span class="url">${escapeHtml(b.url)}</span>
+                    <span class="star ${b.starred ? 'active' : ''}" data-action="star">★</span>
+                    <button class="delete-btn" data-action="delete">삭제</button>
+                </li>
+            `).join('');
+        };
+        render();
 
         // TODO 3: 추가 버튼 — 이름+URL 받아서 bookmarks에 추가 + 저장 + 렌더링
+        // AI: Claude Code 생성, 검증 완료
+        addBtn.addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            const url = urlInput.value.trim();
+            if (!name || !url) return; // P0 — 빈 값 거부
+            bookmarks.push({
+                id: Date.now().toString(),
+                name,
+                url: normalizeUrl(url),
+                starred: false
+            });
+            save();
+            render();
+            nameInput.value = '';
+            urlInput.value = '';
+            nameInput.focus();
+        });
 
         // TODO 4: 이벤트 위임 — list에 click 1개로 별표 토글 / 삭제 / 사이트명 클릭 시 window.open
+        // AI: Claude Code 생성, 검증 완료
+        list.addEventListener('click', (e) => {
+            const li = e.target.closest('li');
+            if (!li) return;
+            const id = li.dataset.id;
+            const action = e.target.dataset.action;
+            const bm = bookmarks.find(b => b.id === id);
+            if (!bm) return;
+
+            if (action === 'star') {
+                bm.starred = !bm.starred;
+                save();
+                render();
+            } else if (action === 'delete') {
+                bookmarks = bookmarks.filter(b => b.id !== id);
+                save();
+                render();
+            } else if (action === 'open') {
+                window.open(bm.url, '_blank');
+            }
+        });
     </script>
 </body>
 

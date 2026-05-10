@@ -33,17 +33,50 @@
     <div class="count">
         글자: <span id="charCount">0</span> · 단어: <span id="wordCount">0</span>
     </div>
+    <button id="clear" type="button">지우기</button>
 
     <script>
         const textarea = document.querySelector('#memoText');
         const charEl = document.querySelector('#charCount');
         const wordEl = document.querySelector('#wordCount');
+        const clearEl = document.querySelector('#clear');
+        const countEl = document.querySelector('.count');
+
+        // 직접 작성
+        const setCount = (text) => {
+            charEl.textContent = text.length;
+            wordEl.textContent = text.trim().split(/\s+/).filter(w => w).length;
+
+            if (text.length >= 200) {
+                countEl.style.color = 'red';
+            } else {
+                countEl.style.color = 'black';
+            }
+        };
 
         // TODO 1: 페이지 로드 시 localStorage에서 저장된 글 복원
         //         힌트: localStorage.getItem('memo'), textarea.value = ...
+        // 직접 작성
+        const memo = localStorage.getItem('memo');
+        textarea.value = memo;
+        setCount(memo);
 
         // TODO 2: textarea의 input 이벤트로 글자/단어 수 갱신 + localStorage 저장
         //         힌트: text.length (글자 수), text.trim().split(/\s+/).filter(w => w).length (단어 수)
+        // 직접 작성
+        textarea.addEventListener('input', (e) => {
+            const text = e.target.value;
+            localStorage.setItem('memo', text);
+            setCount(text);
+        });
+
+        // TODO 3: 지우기
+        // 직접 작성
+        clearEl.addEventListener('click', (e) => {
+            textarea.value = '';
+            localStorage.setItem('memo', '');
+            setCount('');
+        });
     </script>
 </body>
 
